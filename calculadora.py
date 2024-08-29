@@ -1,33 +1,38 @@
 while True:
     try:
         entrada = input(
-            '\nDigite "I" para iniciar a operação ou "P" para parar: ')
+'\nDigite "I" para iniciar a operação ou "P" para parar, e pressione Enter. \n')
         if entrada == 'I' or entrada == 'i':
-            print('\nCalculadora v0.1.0\n')
-            num1 = int(input('Digite o primeiro número: '))
-            operador = input('Digite o operador: ')
-            num2 = int(input('Digite o segundo número: '))
+            print('\nCalculadora v0.2.0\n')
+            num1 = float(input('Primeiro número:\n'))
+            num2 = float(input('Segundo número:\n'))
+            operador = input('Operador:\n')
             if operador == '+':
-                print(f'A soma dos dois números é {num1+num2}')
+                resultado = num1 + num2
             elif operador == '-':
-                print(f'A subtração dos dois números é {num1-num2}')
+                resultado = num1 - num2
             elif operador == '*':
-                print(f'A multiplicação dos dois números é {num1*num2}')
-            elif operador == '**':
-                print(f'A exponenciação dos dois números é {num1**num2}')
+                resultado = num1 * num2
             elif operador == '/':
-                print(f'A divisão dos dois números é {num1/num2}')
+                resultado = num1 / num2
             elif operador == '//':
-                print(f'A divisão inteira dos dois números é {num1//num2}')
+                resultado = num1 // num2
+            elif operador == '**':
+                resultado = num1 ** num2
             elif operador == '%':
-                print(f'O resto da divisão dos dois números é {num1%num2}')
+                resultado = num1 % num2
             else:
                 print('Erro: operador inválido.')
+                continue
+
+            # Se o resultado é um número inteiro, converta-o para int
+            if resultado.is_integer():
+                resultado = int(resultado)
+            print(f'\nResultado = {resultado}')
         elif entrada == 'P' or entrada == 'p':
             print('\nVocê saiu.')
             break
         else:
             print('Erro: você não digitou nenhuma das opções.')
-
     except:
         print('Erro: valor inválido.')
