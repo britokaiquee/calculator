@@ -1,6 +1,11 @@
 import os
+import sys
 
-print('\nCalculadora v0.10.0')
+
+print('Calculadora v0.11.0')
+
+operadores = ['+', '-', '*', '**', '/', '//', '%', '%%']
+
 
 # Função para limpar a tela, compatível com Windows e Unix-based OS
 def limpar_tela():
@@ -28,18 +33,12 @@ def executar_operacao(numero, operador, prox_num):
         '/': lambda: numero / prox_num,
         '//': lambda: numero // prox_num,
         '%': lambda: numero % prox_num,
+        '%%': lambda: divisao_equilibrada(int(numero), int(prox_num))
     }
 
     try:
         if operador in switch_operador:
             return switch_operador[operador]()
-        elif operador == '%%':
-            limpar_tela()
-            print(f'Resultado:\n{divisao_equilibrada(
-                int(numero), int(prox_num))}')
-            main()
-        else:
-            return 'Operador inválido'
 
     except ZeroDivisionError:
         return '\nErro: é impossível dividir por zero.'
@@ -59,61 +58,62 @@ def divisao_equilibrada(dividendo, divisor, n1='x', n2=''):
 # Função principal que controla o fluxo do programa
 def main():
     while True:
-        # Solicita ao usuário para iniciar ou parar a operação
-        entrada = input(
-            '\nDigite "C" para continuar ou "P" para parar: ').lower()
-        limpar_tela()
+        # Solicita o primeiro número
+        numero = obter_numero('\nPrimeiro número:\n')
 
-        # Inicia a operação
-        if entrada == 'c':
-            numero = obter_numero('\nPrimeiro número:\n')
+        while True:
+            operador = input('\nOperador/comando ("L" para listar):\n').lower()
 
-            while True:
-                operador = input('\nOperador ou comando ("F" para finalizar \
-| "L" para listar operadores):\n').lower()
+            if operador == 'f':
+                limpar_tela()
+                break
 
-                if operador == 'f':
-                    break
-                elif operador == 'l':
-                    limpar_tela()
-                    print('\nOperadores disponíveis:')
-                    print(' +  : Adição')
-                    print(' -  : Subtração')
-                    print(' *  : Multiplicação')
-                    print(' ** : Exponenciação')
-                    print(' /  : Divisão')
-                    print(' // : Divisão inteira')
-                    print(' %  : Módulo')
-                    print(' %% : Divisão equilibrada')
-                    continue
+            elif operador == 'l':
+                limpar_tela()
+                print('\nOperadores disponíveis:')
+                print(' +  : Adição')
+                print(' -  : Subtração')
+                print(' *  : Multiplicação')
+                print(' ** : Exponenciação')
+                print(' /  : Divisão')
+                print(' // : Divisão inteira')
+                print(' %  : Módulo')
+                print(' %% : Divisão equilibrada')
 
-                # Verifica se o operador é válido antes de continuar
-                if operador not in ['+', '-', '*', '**', '/', '//', '%', '%%']:
-                    limpar_tela()
-                    print('\nOperador inválido. Tente novamente.')
-                    continue
+                print('\nComandos disponíveis:')
+                print(' L  : Exibir lista de operadores e comandos disponíveis')
+                print(' F  : Finalizar operação')
+                print(' P  : Parar/encerrar o programa')
+                continue
 
-                prox_num = obter_numero('\nPróximo número:\n')
+            elif operador == 'p':
+                limpar_tela()
+                print('Programa encerrado.')
+                sys.exit()
 
-                # Executa a operação e atualiza o número
-                resultado = executar_operacao(numero, operador, prox_num)
+            # Verifica se o operador é válido antes de continuar
+            if operador not in operadores:
+                limpar_tela()
+                print('\nOperador ou comando inválido. Tente novamente.')
+                continue
 
-                if isinstance(resultado, float) and resultado.is_integer():
-                    resultado = int(resultado)
+            # Solicita o próximo número
+            prox_num = obter_numero('\nPróximo número:\n')
 
-                print(f'\nResultado: {resultado}\n')
+            # Executa a operação e atualiza o número
+            resultado = executar_operacao(numero, operador, prox_num)
 
-                # Atualiza o número para a próxima iteração
-                numero = resultado
+            if isinstance(resultado, float) and resultado.is_integer():
+                resultado = int(resultado)
 
-        # Encerra o programa
-        elif entrada == 'p':
-            print('\nPrograma encerrado.')
-            break
+            limpar_tela()
+            print(f'Resultado:\n{resultado}')
 
-        else:
-            print('Erro: você não digitou nenhuma das opções.')
+            if operador == '%%':
+                break
 
+            # Atualiza o número para a próxima iteração
+            numero = resultado
 
 # Executa a função principal se o script for executado diretamente
 if __name__ == "__main__":
