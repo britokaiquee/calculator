@@ -6,91 +6,44 @@ def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
+print('Calculadora v0.17.0\n')
+print('Pressione "L" para listar\noperadores e comandos.\n')
+
+
+################################ OPERAÇÃO ######################################
+
 # Função principal
 def main():
     try:
-        print('Calculadora v0.16.0 - by: Kaique.\n')
-        print('"l" para listar operadores e comandos.\n\n')
-
         while True:
-            # Solicita o primeiro número ou comando
-            numero = obter_entrada('Primeiro número:\n')
-            print()
+            # Solicita a expressão a ser avaliada
+            expressao = input('\nDigite a expressão ou comando:\n').replace(
+                ' ', '').upper()
+            if processar_comando(expressao):
+                continue
 
-            while True:
-                operador = input('Operador:\n').lower()
-
-                if processar_comando(operador):
-                    continue
-
-                operadores = ['+', '-', '*', '**', '/', '//', '%', '%%', '&']
-
-                # Verifica se o operador é válido antes de continuar
-                if operador not in operadores:
-                    limpar_tela()
-                    print('Operador ou comando inválido. Tente novamente.')
-                    print()
-                    continue
-
-                # Solicita o próximo número ou comando
-                print()
-                prox_num = obter_entrada('Próximo número:\n')
-
-                # Executa a operação e atualiza o número
-                resultado = executar_operacao(numero, operador, prox_num)
-
+            # Avalia a expressão e lida com possíveis erros
+            try:
+                resultado = avaliar_expressao(expressao)
                 limpar_tela()
-                print('Pressione "l" para listar operadores e comandos.\n')
-                print(f'Resultado:\n{resultado}\n\n')
-
-                if operador == '%%':
-                    break
-
-                # Atualiza o número para a próxima iteração
-                numero = resultado
+                print('L = listar operadores e comandos.\n')
+                print(f'Resultado:\n{resultado}\n')
+            except Exception:
+                limpar_tela()
+                print(f'Erro ao avaliar a expressão. Tente novamente.')
 
     except KeyboardInterrupt:
         limpar_tela()
 
-################################ OPERAÇÃO ######################################
 
-def executar_operacao(x, operador, y):
-    # Dicionário de operadores e suas funções correspondentes
-    switch_operador = {
-        '+': lambda: x + y,
-        '-': lambda: x - y,
-        '*': lambda: x * y,
-        '**': lambda: x ** y,
-        '/': lambda: x / y,
-        '//': lambda: x // y,
-        '%': lambda: x % y,
-        '%%': lambda: divisao_equilibrada(formatar(x), formatar(y)),
-        '&': lambda: radiciacao(x, y)
-    }
-
+def avaliar_expressao(expressao):
     try:
-        if operador in switch_operador:
-            resultado = switch_operador[operador]()
-            # Verificação para evitar floats desnecessários
-            resultado = formatar(resultado)
-            # Adiciona a operação ao histórico
-            historico.append((formatar(x), operador, formatar(y), resultado))
-            return resultado
-
+        resultado = eval(expressao)
+        formatado = formatar(resultado)
+        adicionar_historico(expressao, formatado)
+        return formatado
     except ZeroDivisionError:
         return 'Impossível dividir por zero.\n'
-
-
-def obter_entrada(mensagem):
-    while True:
-        entrada = input(mensagem).lower()
-        if processar_comando(entrada):
-            continue
-        try:
-            return float(entrada)
-        except ValueError:
-            limpar_tela()
-            print('Valor ou comando inválido. Tente novamente.\n')
 
 
 def formatar(numero):
@@ -98,40 +51,16 @@ def formatar(numero):
         return int(numero)
     return numero
 
-############################ OPERADORES CRIADOS ################################
-
-# Fórmula criada por mim
-def divisao_equilibrada(dividendo, divisor):
-    quociente = dividendo // divisor
-    resto = dividendo % divisor
-    next = quociente + 1
-    
-    # guard clause pra retornar uma divisão inteira caso não haja resto
-    if resto == 0:
-        return f'{quociente} x {divisor}'
-
-    # guard clause pra retornar uma divisão normal caso haja números flutuantes
-    if isinstance(dividendo, float) or isinstance(divisor, float):
-        quociente = dividendo / divisor
-        return f'{quociente} x {divisor}'
-
-    return f'\n{quociente} x {(divisor - resto)}\n{next} x {resto}'
-
-
-# Raiz quadrada, cúbica, etc
-def radiciacao(x, y):
-    potencia = 1 / y
-    raiz = x ** potencia
-    return raiz
 
 ################################# COMANDOS #####################################
 
 def processar_comando(comando):
     switch_comando = {
-        'l': listar_comandos,
-        'h': exibir_historico,
-        'a': apagar_historico,
-        'r': reiniciar_calculadora,
+        'L': listar_comandos,
+        'H': exibir_historico,
+        'A': apagar_historico,
+        'D': divisao_equilibrada,
+        'R': radiciacao
     }
 
     if comando in switch_comando:
@@ -142,36 +71,49 @@ def processar_comando(comando):
 
 def listar_comandos():
     limpar_tela()
-    print('Operadores disponíveis:')
+    print('Calculadora criada por: Kaique Brito.')
+    print('\n() | Use para agrupar expressões')
+    print('\nOperadores:')
     print('+  | Adição')
     print('-  | Subtração')
-    print('*  | Multiplicação x')
-    print('** | Exponenciação ^')
-    print('/  | Divisão ÷')
-    print('// | Divisão inteira ÷')
-    print('%  | Módulo (resto da divisão) ÷')
-    print('%% | Divisão equilibrada ÷')
-    print('&  | Radiciação √ (1º número é o radicando e o próximo é o índice)')
-    print('\nObs: o primeiro número passa a ser o resultado após a 1ª conta,')
-    print('mas você pode usar o comando "r" pra resetar.')
-    print('\nComandos disponíveis:')
-    print('l  | Lista de operadores e comandos disponíveis')
-    print('h  | Histórico das operações')
-    print('a  | Apagar histórico')
-    print('r  | Reiniciar calculadora (finalizar operação)')
-    print('\nCtrl+c | Close\n\n')
+    print('*  | Multiplicação')
+    print('** | Exponenciação')
+    print('/  | Divisão')
+    print('// | Divisão inteira')
+    print('#  | Módulo')
+    print('\nOperadores bitwise (bit a bit):')
+    print('&  | AND')
+    print('|  | OR')
+    print('^  | XOR')
+    print('~  | NOT')
+    print('<< | Deslocamento à esquerda')
+    print('>> | Deslocamento à direita')
+    print('\nOperadores especiais:')
+    print('D  | Divisão equilibrada')
+    print('R  | Radiciação (√)')
+    print('P  | Porcentagem (%)')
+    print('\nOutros comandos:')
+    print('L  | Lista de operadores e comandos disponíveis')
+    print('H  | Histórico das operações')
+    print('A  | Apagar histórico')
+    print('\nCtrl+c | Close\n')
 
+
+############################### HISTÓRICO ######################################
 
 # Lista para armazenar o histórico das operações
 historico = []
 
 
+def adicionar_historico(expressao, resultado):
+    historico.append((expressao, resultado))
+
+
 def exibir_historico():
     limpar_tela()
     print('Histórico das operações:')
-    for i, operacao in enumerate(historico, 1):
-        num_anterior, op, prox_num, resultado = operacao
-        print(f'{i}. {num_anterior} {op} {prox_num} = {resultado}\n')
+    for i, (expressao, resultado) in enumerate(historico, 1):
+        print(f'{i}| {expressao} = {resultado}')
 
     if not historico:
         print('Histórico vazio.\n')
@@ -187,9 +129,51 @@ def apagar_historico():
         print('O histórico já está vazio.\n')
 
 
-def reiniciar_calculadora():
-    limpar_tela()
-    main()
+########################### OPERADORES ESPECIAIS ###############################
+
+# Fórmula pensada por mim, como uma variação da divisão inteira
+def divisao_equilibrada():
+    try:
+        limpar_tela()
+        dividendo = int(input('Dividendo: '))
+        divisor = int(input('Divisor: '))
+        quociente = dividendo // divisor
+        resto = dividendo % divisor
+        next = quociente + 1
+        resultado = f'{quociente} x {divisor - resto} | {next} x {resto}'
+
+        # guard clause pra retornar uma divisão inteira caso não haja resto
+        if resto == 0:
+            resultado = f'{quociente} x {divisor}'
+
+        print(f'\nResultado:\n{resultado}\n')
+        adicionar_historico(f'{dividendo} %% {divisor}', resultado)
+
+    except ValueError:
+        limpar_tela()
+        print('Valor inválido.')
+
+    except ZeroDivisionError:
+        limpar_tela()
+        print('Impossível dividir por zero.')
+
+
+# Lógica para raiz quadrada, cúbica, etc...
+def radiciacao():
+    try:
+        limpar_tela()
+        indice = int(input('Índice: '))
+        radicando = int(input('Radicando: '))
+        potencia = 1 / indice
+        raiz = radicando ** potencia
+        resultado = formatar(raiz)
+        print(f'\nResultado:\n{resultado}\n')
+        adicionar_historico(f'(índice: {indice}) √{radicando}', resultado)
+
+    except ValueError:
+        limpar_tela()
+        print('Valor inválido.')
+
 
 ################################################################################
 
