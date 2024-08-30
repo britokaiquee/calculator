@@ -28,7 +28,7 @@ while True:
         os.system('cls')
 
         if entrada.lower() == 'i':
-            print('\nCalculadora v0.7.0\n')
+            print('\nCalculadora v0.8.0\n')
             while True:
                 try:
                     resultado = float(input('Primeiro número:\n'))
@@ -50,7 +50,7 @@ while True:
                             num = float(input('\nPróximo número:\n'))
                             if num == 0:
                                 if operador == '/' or operador == '//' \
-                                    or operador == '%%':
+                                        or operador == '%%':
                                     print('\nErro: divisão por zero.')
                                     continue
                             break  # Sai do loop se o valor for válido
@@ -58,34 +58,29 @@ while True:
                             os.system('cls')
                             print('\nErro: valor inválido. Tente novamente.\n')
 
-                    if operador == '+':
-                        resultado += num
-                    elif operador == '-':
-                        resultado -= num
-                    elif operador == '*':
-                        resultado *= num
-                    elif operador == '/':
-                        resultado /= num
-                    elif operador == '//':
-                        resultado //= num
-                    elif operador == '**':
-                        resultado **= num
-                    elif operador == '%':
-                        resultado %= num
+                    switch_operador = {
+                        '+': lambda: resultado + num,
+                        '-': lambda: resultado - num,
+                        '*': lambda: resultado * num,
+                        '/': lambda: resultado / num,
+                        '//': lambda: resultado // num,
+                        '**': lambda: resultado ** num,
+                        '%': lambda: resultado % num,
+                    }
+
+                    if operador in switch_operador:
+                        resultado = switch_operador[operador]()
                     elif operador == '%%':
                         os.system('cls')
-                        print(
-                            f'\nResultado:\
-                                \n{divisao_equilibrada(
-                                    int(resultado), int(num))}'
-                        )
+                        print(f'Resultado:\n{divisao_equilibrada(
+                            int(resultado), int(num))}')
                         break
 
                     if resultado.is_integer():
                         resultado = int(resultado)
 
                     print(f'\nResultado: {resultado}\n')
-
+                
                 else:
                     print('\nErro: operador inválido.\n')
 
