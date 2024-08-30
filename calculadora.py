@@ -3,13 +3,14 @@ import os
 import textwrap
 import tabulate
 from tabulate import tabulate
+from datetime import datetime
 
 
 ################################ OPERAÇÃO ######################################
 
 # Função principal
 def entrada():
-    print('Calculadora v0.23.0\n')
+    print('Calculadora v0.24.0\n')
     print('Pressione "M" para ver o manual.\n')
     try:
         while True:
@@ -121,9 +122,10 @@ def formatar(numero):
 
 def processar_comando(comando):
     switch_comando = {
-        'M': exibir_manual,
-        'H': exibir_historico,
+        'M': manual,
+        'H': historico,
         'A': apagar_historico,
+        'C': comparar_datas
     }
 
     if comando in switch_comando:
@@ -132,7 +134,7 @@ def processar_comando(comando):
     return False
 
 
-def exibir_manual():
+def manual():
     limpar_tela()
     print('Calculadora e fórmula da divisão equilibrada\
 \ncriadas por: Kaique Brito.\n')
@@ -183,7 +185,8 @@ porcentagem seguida do valor\ntotal, exemplo: 5%20 (resultado: 1).\n')
         ("M", "Manual"),
         ("H", "Histórico"),
         ("A", "Apagar histórico"),
-        ("Ctrl+c", "Close (fechar programa)")
+        ("C", "Calcular datas"),
+        ("V", "Voltar (seção de cálculo de datas)")
     ]
 
     print(tabulate(comandos,
@@ -205,14 +208,111 @@ porcentagem seguida do valor\ntotal, exemplo: 5%20 (resultado: 1).\n')
 # (possível comando para mostrar fórmulas dos operadores em breve...)
 
 
+def comparar_datas():
+    limpar_tela()
+    print('Cálculo de datas')
+    print('V = voltar para o ínicio da calculadora.\n')
+    # Definindo uma função para calcular a diferença entre duas datas
+
+    def calcular_diferenca(data_inicial, data_final):
+        # Verifica se a data inicial é maior que a data final
+        if data_inicial > data_final:
+            # Troca as datas
+            data_inicial, data_final = data_final, data_inicial
+
+        # Calcula a diferença de anos entre as duas datas
+        anos_completos = data_final.year - data_inicial.year
+        if (data_final.month, data_final.day) < (data_inicial.month,
+                                                 data_inicial.day):
+            # Reduz um ano se o mês e dia finais forem anteriores ao mês e dia
+            # iniciais
+            anos_completos -= 1
+
+        # Calcula a diferença de meses entre as duas datas
+        meses = data_final.month - data_inicial.month
+        if meses < 0 or (meses == 0 and data_final.day < data_inicial.day):
+            # Adiciona 12 meses se o mês final for anterior ao mês inicial
+            # Ou se estiver no mesmo mês mas o dia final for anterior ao dia
+            # inicial
+            meses += 12
+
+        # Calcula a diferença de dias entre as duas datas
+        dias = data_final.day - data_inicial.day
+        if dias < 0:
+            # Obtém o último mês
+            ultimo_mes = data_final.replace(month=data_final.month - 1)
+            dias += (data_final - ultimo_mes).days
+            # Reduz um mês se o dia final for anterior dia inicial
+            meses -= 1
+
+        # Retorna a diferença em anos, meses e dias
+        return anos_completos, meses, dias
+
+    # Solicitando a primeira data do usuário
+    while True:
+        try:
+            data_inicial_str = input("Insira a primeira data no formato \
+(DD/MM/YYYY)\nou pressione Enter para a data atual:\n").upper()
+            if data_inicial_str == 'V':
+                limpar_tela()
+                entrada()
+            elif data_inicial_str:
+                data_inicial = datetime.strptime(data_inicial_str, "%d/%m/%Y")
+            else:
+                data_inicial = datetime.now()
+            limpar_tela()
+            break
+        except ValueError:
+            limpar_tela()
+            print("Formato de data inválido. Tente novamente.\n")
+
+    # Solicitando a segunda data do usuário
+    while True:
+        try:
+            print(f'Primeira data: {data_inicial_str if data_inicial_str \
+                                    else 'data atual'}\n')
+            data_final_str = input("Insira a segunda data ou pressione Enter: "
+                                   ).upper() or print('data atual')
+            if data_final_str == 'V':
+                limpar_tela()
+                entrada()
+            elif data_final_str:
+                data_final = datetime.strptime(data_final_str, "%d/%m/%Y")
+            else:
+                data_final = datetime.now()
+            break
+        except ValueError:
+            limpar_tela()
+            print("Formato de data inválido. Tente novamente.\n")
+
+    # Calculando a diferença
+    anos, meses, dias = calcular_diferenca(data_inicial, data_final)
+
+    # Exibindo resultado
+    print('\nResultado: ', end='')
+
+    resultado = []
+    if anos > 0:
+        resultado.append(f"{anos} ano(s)")
+    if meses > 0:
+        resultado.append(f"{meses} mês(es)")
+    if dias > 0:
+        resultado.append(f"{dias} dia(s)")
+
+    if resultado:
+        print(f"{'; '.join(resultado)}\n")
+    else:
+        print("mesmas datas.\n")
+
 ############################### HISTÓRICO ######################################
 
+
 # Lista para armazenar o histórico das operações
-historico = []
+lista_historico = []
 
 
 def adicionar_historico(expressao, resultado):
-    historico.append((expressao, resultado))
+    lista_historico.append((expressao, resultado))
 
 
 def wrap(text, width):
@@ -221,15 +321,15 @@ def wrap(text, width):
     return "\n".join(textwrap.wrap(text, width))
 
 
-def exibir_historico():
+def historico():
     limpar_tela()
     print('Histórico:')
-    if historico:
+    if lista_historico:
         terminal_width = os.get_terminal_size().columns
         maxwidth = max(20, terminal_width // 3)
 
         tabelas = []
-        for i, (expressao, resultado) in enumerate(historico, 1):
+        for i, (expressao, resultado) in enumerate(lista_historico, 1):
             tabelas.append([i, wrap(expressao, maxwidth), wrap(
                 resultado, maxwidth)])
 
@@ -243,8 +343,8 @@ def exibir_historico():
 
 
 def apagar_historico():
-    if historico:
-        historico.clear()
+    if lista_historico:
+        lista_historico.clear()
         limpar_tela()
         print('Histórico apagado.\n')
     else:
@@ -262,7 +362,8 @@ def divisao_equilibrada(expressao):
     quociente = dividendo // divisor
     resto = dividendo % divisor
     next = quociente + 1
-    resultado = f'{quociente} x {divisor - resto} | {next} x {resto}'
+    resultado = f'{quociente} x {divisor - resto} \
+                                        \n{next} x {resto}'
 
     # guard clause pra retornar uma divisão inteira caso não haja resto
     if resto == 0:
