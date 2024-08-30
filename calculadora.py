@@ -1,4 +1,5 @@
 import os
+from tabulate import tabulate
 
 
 # Função para limpar a tela, compatível com Windows e Unix-based OS
@@ -6,7 +7,7 @@ def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-print('Calculadora v0.18.0\n')
+print('Calculadora v0.19.0\n')
 print('Pressione "L" para listar\noperadores e comandos.\n')
 
 
@@ -62,7 +63,7 @@ def formatar(numero):
 
 def processar_comando(comando):
     switch_comando = {
-        'L': listar_comandos,
+        'L': exibir_lista,
         # Comandos do histórico:
         'H': exibir_historico,
         'A': apagar_historico,
@@ -78,34 +79,26 @@ def processar_comando(comando):
     return False
 
 
-def listar_comandos():
+def exibir_lista():
     limpar_tela()
     print('Calculadora criada por: Kaique Brito.')
-    print('\n() | Use para agrupar expressões')
-    print('\nOperadores:')
-    print('+  | Adição')
-    print('-  | Subtração')
-    print('*  | Multiplicação')
-    print('** | Exponenciação')
-    print('/  | Divisão')
-    print('// | Divisão inteira')
-    print('#  | Módulo')
-    print('\nOperadores bitwise (bit a bit):')
-    print('&  | AND')
-    print('|  | OR')
-    print('^  | XOR')
-    print('~  | NOT')
-    print('<< | Deslocamento à esquerda')
-    print('>> | Deslocamento à direita')
-    print('\nOperadores especiais:')
-    print('D  | Divisão equilibrada')
-    print('R  | Radiciação (√)')
-    print('P  | Porcentagem (%)')
-    print('\nOutros comandos:')
-    print('L  | Lista de operadores e comandos disponíveis')
-    print('H  | Histórico das operações')
-    print('A  | Apagar histórico')
-    print('\nCtrl+c | Close\n')
+
+    operadores = [
+        ("+", "Adição", "&", "AND", "D", "(:) Divisão equilibrada"),
+        ("-", "Subtração", "|", "OR", "R", "(√) Radiciação"),
+        ("*", "Multiplicação", "^", "XOR", "P", "(%) Porcentagem"),
+        ("**", "Exponenciação", "~", "NOT", "L", "Listar"),
+        ("/", "Divisão", "<<", "Deslocamento à esquerda", "H", "Histórico"),
+        ("//", "Divisão inteira", ">>", "Deslocamento à direita", "A",
+         "Apagar histórico"),
+        ("#", "Módulo", "", "", "Ctrl+c", "Close")
+    ]
+
+    print(tabulate(operadores,
+                   headers=["Operadores:", "Descrição:",
+                            "Operadores bitwise\n(bit a bit):", "Descrição:",
+                            "Outros operadores e comandos:", "Descrição:"],
+                   tablefmt="fancy_grid"))
 
 
 ############################### HISTÓRICO ######################################
@@ -122,10 +115,18 @@ def exibir_historico():
     limpar_tela()
     print('Histórico das operações:')
 
-    for i, (expressao, resultado) in enumerate(historico, 1):
-        print(f'{i}| {expressao} = {resultado}')
+    if historico:
+        tabelas = []
+        for i, (expressao, resultado) in enumerate(historico, 1):
+            tabelas.append([i, expressao, resultado])
 
-    if not historico:
+        headers = ["Index", "Expressão", "Resultado"]
+        tabela = tabulate(tabelas, headers,
+                          tablefmt="fancy_grid",
+                          numalign="center",
+                          stralign="center")
+        print(tabela)
+    else:
         print('Histórico vazio.\n')
 
 
@@ -152,14 +153,14 @@ def divisao_equilibrada():
         quociente = dividendo // divisor
         resto = dividendo % divisor
         next = quociente + 1
-        resultado = f'{quociente} x {divisor - resto} | {next} x {resto}'
+        resultado = f'{quociente} x {divisor - resto}\n{next} x {resto}'
 
         # guard clause pra retornar uma divisão inteira caso não haja resto
         if resto == 0:
             resultado = f'{quociente} x {divisor}'
 
         print(f'\nResultado:\n{resultado}\n')
-        adicionar_historico(f'{dividendo} & {divisor}', resultado)
+        adicionar_historico(f'{dividendo}:{divisor}', resultado)
 
     except ValueError:
         print('Valor inválido.')
@@ -182,7 +183,7 @@ def radiciacao():
         if radicando < 0:
             print("\nUse um número real.\n")
         else:
-            raiz = formatar(radicando ** potencia) 
+            raiz = formatar(radicando ** potencia)
             print(f'\nResultado:\n{raiz}\n')
             adicionar_historico(f'(índice: {indice}) √{radicando}', raiz)
 
@@ -211,7 +212,7 @@ def porcentagem():
             print(f'\nResultado: {resultado}\n')
             expressao = f'{formatar(valor_total)}{operador}{formatar(
                 porcentagem)}%'
-        
+
         adicionar_historico(expressao, resultado)
 
     except ValueError:
