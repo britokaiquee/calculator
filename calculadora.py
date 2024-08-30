@@ -1,96 +1,98 @@
 import os
 
-'''
-n = divideNdo | d = Divisor | q = Quociente | r = Resto | x = resultado
 
-nn = nome pro valor do dividendo + separador ("x" é o argumento padrão para
-o separador)
-
-dd = nome pro valor do divisor
-'''
+# Função para limpar a tela, compatível com Windows e Unix-based OS
+def limpar_tela():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def divisao_equilibrada(n, d, nn='x', dd=''):
-    q = n // d
-    r = n % d
+# Função para obter um número do usuário com tratamento de erro
+def obter_numero(mensagem):
+    while True:
+        try:
+            return float(input(mensagem))
+        except ValueError:
+            limpar_tela()
+            print('\nErro: valor inválido. Tente novamente.\n')
 
-    if r == 0:
-        return f'{q} {nn} {d} {dd}'
 
-    return f'{q} {nn} {(d - r)} {dd}\n{(q + 1)} {nn} {r} {dd}'
+# Função para executar a operação matemática
+def executar_operacao(numero, operador, prox_num):
+    # Dicionário de operadores e suas funções correspondentes
+    switch_operador = {
+        '+': lambda: numero + prox_num,
+        '-': lambda: numero - prox_num,
+        '*': lambda: numero * prox_num,
+        '/': lambda: numero / prox_num,
+        '//': lambda: numero // prox_num,
+        '**': lambda: numero ** prox_num,
+        '%': lambda: numero % prox_num,
+    }
+    # Verifica se o operador está no dicionário e executa a operação
+    if operador in switch_operador:
+        return switch_operador[operador]()
+    # Caso o operador seja '%%', executa a função da formula_brito
+    elif operador == '%%':
+        limpar_tela()
+        print(f'Resultado:\n{divisao_equilibrada(int(numero), int(prox_num))}')
+        main()
 
 
-while True:
-    try:
+def divisao_equilibrada(dividendo, divisor, n1='x', n2=''):
+    quociente = dividendo // divisor
+    resto = dividendo % divisor
+
+    if resto == 0:
+        return f'{quociente} {n1} {divisor} {n2}'
+
+    return f'{quociente} {n1} {(divisor - resto)} {n2}\n{(
+        quociente + 1)} {n1} {resto} {n2}'
+
+
+# Função principal que controla o fluxo do programa
+def main():
+    while True:
+        # Solicita ao usuário para iniciar ou parar a operação
         entrada = input(
-            '\nDigite "I" para iniciar a operação ou "P" para parar: '
-        )
-        os.system('cls')
+            '\nDigite "I" para iniciar a operação ou "P" para parar: ').lower()
+        limpar_tela()
 
-        if entrada.lower() == 'i':
-            print('\nCalculadora v0.8.0\n')
-            while True:
-                try:
-                    resultado = float(input('Primeiro número:\n'))
-                    break  # Sai do loop se o valor for válido
-                except ValueError:
-                    os.system('cls')
-                    print('\nErro: valor inválido. Tente novamente.\n')
-            print()
+        # Inicia a operação
+        if entrada == 'i':
+            print('\nCalculadora v0.9.0\n')
+            numero = obter_numero('Primeiro número:\n')
 
             while True:
-                operador = input('Operador (ou "F" para finalizar):\n')
+                operador = input(
+                    '\nOperador (ou "F" para finalizar):\n').lower()
 
-                if operador.lower() == 'f':
+                if operador == 'f':
                     break
 
-                if operador in ['+', '-', '*', '/', '//', '**', '%', '%%']:
-                    while True:
-                        try:
-                            num = float(input('\nPróximo número:\n'))
-                            if num == 0:
-                                if operador == '/' or operador == '//' \
-                                        or operador == '%%':
-                                    print('\nErro: divisão por zero.')
-                                    continue
-                            break  # Sai do loop se o valor for válido
-                        except ValueError:
-                            os.system('cls')
-                            print('\nErro: valor inválido. Tente novamente.\n')
+                prox_num = obter_numero('\nPróximo número:\n')
 
-                    switch_operador = {
-                        '+': lambda: resultado + num,
-                        '-': lambda: resultado - num,
-                        '*': lambda: resultado * num,
-                        '/': lambda: resultado / num,
-                        '//': lambda: resultado // num,
-                        '**': lambda: resultado ** num,
-                        '%': lambda: resultado % num,
-                    }
+                # Verifica se o próximo número (divisor) é zero em operações
+                # que não permitem divisão por zero
+                if prox_num == 0 and operador in ['/', '//', '%', '%%']:
+                    print('\nErro: é impossível dividir por zero.')
+                    continue
 
-                    if operador in switch_operador:
-                        resultado = switch_operador[operador]()
-                    elif operador == '%%':
-                        os.system('cls')
-                        print(f'Resultado:\n{divisao_equilibrada(
-                            int(resultado), int(num))}')
-                        break
+                # Executa a operação e atualiza o número
+                resultado = executar_operacao(numero, operador, prox_num)
+                if resultado is not None:
+                    numero = int(resultado) if isinstance(
+                        resultado, int) else resultado
+                    print(f'\nResultado: {numero}\n')
 
-                    if resultado.is_integer():
-                        resultado = int(resultado)
-
-                    print(f'\nResultado: {resultado}\n')
-                
-                else:
-                    print('\nErro: operador inválido.\n')
-
-        elif entrada.lower() == 'p':
+        # Encerra o programa
+        elif entrada == 'p':
             print('\nPrograma encerrado.')
             break
 
         else:
             print('Erro: você não digitou nenhuma das opções.')
 
-    except ValueError:
-        os.system('cls')
-        print('Erro: valor inválido.')
+
+# Executa a função principal se o script for executado diretamente
+if __name__ == "__main__":
+    main()
