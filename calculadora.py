@@ -1,15 +1,6 @@
 import os
 import sys
 
-
-print('Calculadora v0.13.0')
-
-operadores = ['+', '-', '*', '**', '/', '//', '%', '%%']
-
-# Lista para armazenar o histórico das operações
-historico = []
-
-
 # Função para limpar a tela, compatível com Windows e Unix-based OS
 def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -47,7 +38,8 @@ def executar_operacao(x, operador, y):
             formatar(x), formatar(y), input(
                 '\nNome e/ou separador (ou enter): ') or 'x', input(
                     'Nome 2 (ou enter): ')
-        )
+                    ),
+        '&': lambda: radiciacao(x, y)
     }
 
     try:
@@ -63,7 +55,6 @@ def executar_operacao(x, operador, y):
         return '\nErro: é impossível dividir por zero.'
 
 
-# Função do meu operador da divisão equilibrada atualizada
 def divisao_equilibrada(dividendo, divisor, n1='x', n2=''):
     quociente = dividendo // divisor
     resto = dividendo % divisor
@@ -80,6 +71,13 @@ def divisao_equilibrada(dividendo, divisor, n1='x', n2=''):
                                   - resto)} {n2}\n{next} {n1} {resto} {n2}'
 
 
+# Função para radiciação
+def radiciacao(x, y):
+    potencia = 1 / y
+    raiz = x ** potencia
+    return raiz
+
+
 # Função para exibir o histórico das operações
 def exibir_historico():
     limpar_tela()
@@ -90,24 +88,34 @@ def exibir_historico():
         print(f'\n{i}. {num_anterior} {op} {prox_num} = {resultado}')
 
 
+# Função para listar os comandos disponíveis
 def lista_comandos():
     limpar_tela()
     print('Operadores disponíveis:')
     print(' +  : Adição')
     print(' -  : Subtração')
-    print(' *  : Multiplicação')
-    print(' ** : Exponenciação')
-    print(' /  : Divisão')
-    print(' // : Divisão inteira')
-    print(' %  : Módulo')
-    print(' %% : Divisão equilibrada')
+    print(' *  : Multiplicação x')
+    print(' ** : Exponenciação ^')
+    print(' /  : Divisão ÷')
+    print(' // : Divisão inteira ÷')
+    print(' %  : Módulo (resto) ÷')
+    print(' %% : Divisão equilibrada ÷')
+    print(' &  : Radiciação √ (1º número é o radicando e o próximo é o índice)')
+
     print('\nComandos disponíveis:')
     print(' L  : Exibir lista de operadores e comandos disponíveis')
     print(' H  : Histórico das operações')
     print(' R  : Resetar histórico')
-    print(' F  : Finalizar operação (após ter enviado o 1º número)')
+    print(' F  : Finalizar operação (só funciona com o operador)')
     print(' P  : Parar o programa\n')
 
+
+print('Calculadora v0.14.0')
+
+operadores = ['+', '-', '*', '**', '/', '//', '%', '%%', '&']
+
+# Lista para armazenar o histórico das operações
+historico = []
 
 while True:
     # Solicita o primeiro número
@@ -164,3 +172,4 @@ while True:
 
         # Atualiza o número para a próxima iteração
         numero = resultado
+        
