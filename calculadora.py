@@ -9,6 +9,7 @@ o separador)
 dd = nome pro valor do divisor
 '''
 
+
 def divisao_equilibrada(n, d, nn='x', dd=''):
     q = n // d
     r = n % d
@@ -24,19 +25,39 @@ while True:
         entrada = input(
             '\nDigite "I" para iniciar a operação ou "P" para parar: '
         )
+        os.system('cls')
 
         if entrada.lower() == 'i':
-            print('\nCalculadora v0.6.0\n')
-            resultado = float(input('Primeiro número:\n'))
+            print('\nCalculadora v0.7.0\n')
+            while True:
+                try:
+                    resultado = float(input('Primeiro número:\n'))
+                    break  # Sai do loop se o valor for válido
+                except ValueError:
+                    os.system('cls')
+                    print('\nErro: valor inválido. Tente novamente.\n')
+            print()
 
             while True:
-                operador = input('\nOperador (ou "F" para finalizar):\n')
+                operador = input('Operador (ou "F" para finalizar):\n')
 
                 if operador.lower() == 'f':
                     break
 
                 if operador in ['+', '-', '*', '/', '//', '**', '%', '%%']:
-                    num = float(input('\nPróximo número:\n'))
+                    while True:
+                        try:
+                            num = float(input('\nPróximo número:\n'))
+                            if num == 0:
+                                if operador == '/' or operador == '//' \
+                                    or operador == '%%':
+                                    print('\nErro: divisão por zero.')
+                                    continue
+                            break  # Sai do loop se o valor for válido
+                        except ValueError:
+                            os.system('cls')
+                            print('\nErro: valor inválido. Tente novamente.\n')
+
                     if operador == '+':
                         resultado += num
                     elif operador == '-':
@@ -55,18 +76,18 @@ while True:
                         os.system('cls')
                         print(
                             f'\nResultado:\
-                            \n{divisao_equilibrada(int(resultado), int(num))}'
+                                \n{divisao_equilibrada(
+                                    int(resultado), int(num))}'
                         )
                         break
 
-                else:
-                    print('Erro: operador inválido.')
-                    continue
+                    if resultado.is_integer():
+                        resultado = int(resultado)
 
-                if resultado.is_integer():
-                    resultado = int(resultado)
-                    os.system('cls')
                     print(f'\nResultado: {resultado}\n')
+
+                else:
+                    print('\nErro: operador inválido.\n')
 
         elif entrada.lower() == 'p':
             print('\nPrograma encerrado.')
@@ -76,5 +97,5 @@ while True:
             print('Erro: você não digitou nenhuma das opções.')
 
     except ValueError:
+        os.system('cls')
         print('Erro: valor inválido.')
-        
