@@ -6,7 +6,7 @@ def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-print('Calculadora v0.17.0\n')
+print('Calculadora v0.18.0\n')
 print('Pressione "L" para listar\noperadores e comandos.\n')
 
 
@@ -20,6 +20,11 @@ def main():
             expressao = input('\nDigite a expressão ou comando:\n').replace(
                 ' ', '').upper()
             if processar_comando(expressao):
+                continue
+            # Verifica se a expressão contém o símbolo de porcentagem
+            if '%' in expressao:
+                limpar_tela()
+                print('Use o comando "P" para expressões com porcentagem.')
                 continue
 
             # Avalia a expressão e lida com possíveis erros
@@ -38,6 +43,7 @@ def main():
 
 def avaliar_expressao(expressao):
     try:
+        expressao = expressao.replace('#', '%')
         resultado = eval(expressao)
         formatado = formatar(resultado)
         adicionar_historico(expressao, formatado)
@@ -57,10 +63,13 @@ def formatar(numero):
 def processar_comando(comando):
     switch_comando = {
         'L': listar_comandos,
+        # Comandos do histórico:
         'H': exibir_historico,
         'A': apagar_historico,
+        # Comandos dos operadores especiais:
         'D': divisao_equilibrada,
-        'R': radiciacao
+        'R': radiciacao,
+        'P': porcentagem
     }
 
     if comando in switch_comando:
@@ -106,12 +115,13 @@ historico = []
 
 
 def adicionar_historico(expressao, resultado):
-    historico.append((expressao, resultado))
+    historico.append((expressao.replace('%', '#'), resultado))
 
 
 def exibir_historico():
     limpar_tela()
     print('Histórico das operações:')
+
     for i, (expressao, resultado) in enumerate(historico, 1):
         print(f'{i}| {expressao} = {resultado}')
 
@@ -133,8 +143,10 @@ def apagar_historico():
 
 # Fórmula pensada por mim, como uma variação da divisão inteira
 def divisao_equilibrada():
+    limpar_tela()
+    print('Divisão equilibrada\n')
+
     try:
-        limpar_tela()
         dividendo = int(input('Dividendo: '))
         divisor = int(input('Divisor: '))
         quociente = dividendo // divisor
@@ -147,32 +159,66 @@ def divisao_equilibrada():
             resultado = f'{quociente} x {divisor}'
 
         print(f'\nResultado:\n{resultado}\n')
-        adicionar_historico(f'{dividendo} %% {divisor}', resultado)
+        adicionar_historico(f'{dividendo} & {divisor}', resultado)
 
     except ValueError:
-        limpar_tela()
         print('Valor inválido.')
 
     except ZeroDivisionError:
-        limpar_tela()
         print('Impossível dividir por zero.')
 
 
 # Lógica para raiz quadrada, cúbica, etc...
 def radiciacao():
+    print('Radiciação\n')
+    limpar_tela()
+
     try:
-        limpar_tela()
         indice = int(input('Índice: '))
         radicando = int(input('Radicando: '))
         potencia = 1 / indice
-        raiz = radicando ** potencia
-        resultado = formatar(raiz)
-        print(f'\nResultado:\n{resultado}\n')
-        adicionar_historico(f'(índice: {indice}) √{radicando}', resultado)
+
+        # Verifica se o radicando é negativo
+        if radicando < 0:
+            print("\nUse um número real.\n")
+        else:
+            raiz = formatar(radicando ** potencia) 
+            print(f'\nResultado:\n{raiz}\n')
+            adicionar_historico(f'(índice: {indice}) √{radicando}', raiz)
 
     except ValueError:
-        limpar_tela()
-        print('Valor inválido.')
+        print('\nValor inválido.\n')
+
+
+def porcentagem():
+    limpar_tela()
+    print('Porcentagem\n')
+
+    try:
+        valor_total = float(input('Valor: '))
+        operador = input('Operador ou Enter: ')
+        porcentagem = float(input('Porcentagem %: '))
+        parte_valor = (valor_total / 100) * porcentagem
+
+        if operador == '':
+            resultado = formatar(parte_valor)
+            print(f'\nResultado: {resultado}\n')
+            expressao = f'{formatar(porcentagem)}% de {formatar(valor_total)}'
+
+        else:
+            calculo = f'{valor_total}{operador}{parte_valor}'
+            resultado = formatar(eval(calculo))
+            print(f'\nResultado: {resultado}\n')
+            expressao = f'{formatar(valor_total)}{operador}{formatar(
+                porcentagem)}%'
+        
+        adicionar_historico(expressao, resultado)
+
+    except ValueError:
+        print('\nValor inválido.\n')
+
+    except SyntaxError:
+        print('\nOperador inválido.\n')
 
 
 ################################################################################
