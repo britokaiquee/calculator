@@ -1,5 +1,7 @@
 import re
 import os
+import textwrap
+import tabulate
 from tabulate import tabulate
 
 
@@ -7,7 +9,7 @@ from tabulate import tabulate
 
 # Função principal
 def entrada():
-    print('Calculadora v0.20.0\n')
+    print('Calculadora v0.21.0\n')
     print('Pressione "M" para ver o manual.\n')
     try:
         while True:
@@ -113,7 +115,7 @@ def processar_comando(comando):
 
 def exibir_manual():
     limpar_tela()
-    print('Calculadora e fórmula da dvisão equilibrada\
+    print('Calculadora e fórmula da divisão equilibrada\
 \ncriadas por: Kaique Brito.\n')
     print('Obs 1: Digite o índice a esquerda do operador e o radicando a \
 direita para radiciação.')
@@ -121,21 +123,48 @@ direita para radiciação.')
 envolvendo mais de um operador.\n')
 
     operadores = [
-        ("+", "Adição", "&", "AND", ":", "Divisão equilibrada"),
-        ("-", "Subtração", "|", "OR", "@", "Radiciação"),
-        ("*", "Multiplicação", "^", "XOR", "P", "(%) Porcentagem"),
-        ("**", "Exponenciação", "~", "NOT", "M", "Manual"),
-        ("/", "Divisão", "<<", "Deslocamento à esquerda", "H", "Histórico"),
-        ("//", "Divisão inteira", ">>", "Deslocamento à direita", "A",
-         "Apagar histórico"),
-        ("#", "Módulo", "", "", "Ctrl+c", "Close")
+        ("+", "Adição"),
+        ("-", "Subtração"),
+        ("*", "Multiplicação"),
+        ("**", "Exponenciação"),
+        ("/", "Divisão"),
+        ("//", "Divisão inteira"),
+        ("#", "Módulo")
     ]
 
-    print(tabulate(operadores,
-                   headers=["Operadores:", "Descrição:",
-                            "Operadores bitwise\n(bit a bit):", "Descrição:",
-                            "Outros operadores e comandos:", "Descrição:"],
+    operadores_logicos = [
+        ("&", "AND"),
+        ("|", "OR"),
+        ("^", "XOR"),
+        ("~", "NOT"),
+        ("<<", "Deslocamento à esquerda"),
+        (">>", "Deslocamento à direita")
+    ]
+
+    comandos = [
+        ("P", "Porcentagem"),
+        ("M", "Manual"),
+        ("H", "Histórico"),
+        ("A", "Apagar histórico"),
+        ("Ctrl+c", "Close (fechar programa)")
+    ]
+
+    print('Para usar um comando, digite a letra uma vez e pressione Enter.\n')
+    print(tabulate(comandos,
+                   headers=["Comandos:", "Descrição:"],
                    tablefmt="fancy_grid"))
+
+    print()
+    print(tabulate(operadores_logicos,
+                   headers=["Operadores Bitwise (Bit-a-Bit):", "Descrição:"],
+                   tablefmt="fancy_grid"))
+
+    print()
+    print(tabulate(operadores,
+                   headers=["Operadores:", "Descrição:"],
+                   tablefmt="fancy_grid"))
+
+    print('\nArraste para cima para explorar mais.\n')
 
 
 ############################### HISTÓRICO ######################################
@@ -148,15 +177,24 @@ def adicionar_historico(expressao, resultado):
     historico.append((expressao.replace('%', '#'), resultado))
 
 
+def wrap(text, width):
+    if not isinstance(text, str):
+        text = str(text)  # Garantir que o texto seja uma string
+    return "\n".join(textwrap.wrap(text, width))
+
+
 def exibir_historico():
     limpar_tela()
     print('Histórico das operações:')
     if historico:
+        terminal_width = os.get_terminal_size().columns
+        maxwidth = max(20, terminal_width // 3)
+
         tabelas = []
         for i, (expressao, resultado) in enumerate(historico, 1):
-            tabelas.append([i, expressao, resultado])
+            tabelas.append([i, wrap(expressao, maxwidth), wrap(
+                resultado, maxwidth)])
 
-        # Isso entre colchetes é tipo argumentos posicionais ao contrário
         headers = ["Expressão", "Resultado"]
         tabela = tabulate(tabelas, headers, tablefmt="fancy_grid")
         print(tabela)
