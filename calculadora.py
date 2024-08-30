@@ -1,49 +1,84 @@
+import re
 import os
 from tabulate import tabulate
-
-
-# Função para limpar a tela, compatível com Windows e Unix-based OS
-def limpar_tela():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-
-print('Calculadora v0.19.0\n')
-print('Pressione "L" para listar\noperadores e comandos.\n')
 
 
 ################################ OPERAÇÃO ######################################
 
 # Função principal
-def main():
+def entrada():
+    print('Calculadora v0.20.0\n')
+    print('Pressione "M" para ver o manual.\n')
     try:
         while True:
             # Solicita a expressão a ser avaliada
             expressao = input('\nDigite a expressão ou comando:\n').replace(
                 ' ', '').upper()
-            if processar_comando(expressao):
-                continue
-            # Verifica se a expressão contém o símbolo de porcentagem
-            if '%' in expressao:
+
+            # Verifica a validade da expressão
+            valido, mensagem = verificar_expressao(expressao)
+            if not valido:
                 limpar_tela()
-                print('Use o comando "P" para expressões com porcentagem.')
+                print(mensagem)
+                continue
+
+            if processar_comando(expressao):
                 continue
 
             # Avalia a expressão e lida com possíveis erros
             try:
                 resultado = avaliar_expressao(expressao)
                 limpar_tela()
-                print('L = listar operadores e comandos.\n')
                 print(f'Resultado:\n{resultado}\n')
             except Exception:
                 limpar_tela()
-                print(f'Erro ao avaliar a expressão. Tente novamente.')
+                print(f'Erro ao avaliar a expressão. Tente novamente.\n')
 
     except KeyboardInterrupt:
         limpar_tela()
 
 
+def verificar_ponto(expressao):
+    # Verifica se há ponto no início ou no final da expressão
+    if expressao.startswith('.') or expressao.endswith('.'):
+        return False
+    # Verifica se há ponto sem número à direita após operador
+    if re.search(r'\.\D', expressao):
+        return False
+    # Verifica se há ponto sem número à esquerda antes do operador
+    if re.search(r'\D\.', expressao):
+        return False
+    return True
+
+
+def verificar_operador_no_inicio(expressao):
+    # Verifica se a expressão começa com um operador
+    return not re.match(r'[+\-*/#&|^~<<>>:@]', expressao)
+
+
+def verificar_expressao(expressao):
+    if not verificar_ponto(expressao):
+        return False, "Expressão inválida: ponto mal posicionado."
+    if not verificar_operador_no_inicio(expressao):
+        return False, "Expressão inválida: não deve começar com um operador."
+    return True, ""
+
+
 def avaliar_expressao(expressao):
+    # Verifica se a expressão contém um operador válido
+    if not re.search(r'[+\-*/#&|^~<<>>:@]', expressao):
+        return 'Operador não encontrado. Verifique a expressão.'
+
+    # Verifica se a expressão contém o símbolo de porcentagem
+    if '%' in expressao:
+        return 'Use o comando "P" para expressões com porcentagem.'
+
     try:
+        if ':' in expressao:
+            return divisao_equilibrada(expressao)
+        elif '@' in expressao:
+            return radiciacao(expressao)
+
         expressao = expressao.replace('#', '%')
         resultado = eval(expressao)
         formatado = formatar(resultado)
@@ -63,14 +98,11 @@ def formatar(numero):
 
 def processar_comando(comando):
     switch_comando = {
-        'L': exibir_lista,
+        'M': exibir_manual,
+        'P': porcentagem,
         # Comandos do histórico:
         'H': exibir_historico,
         'A': apagar_historico,
-        # Comandos dos operadores especiais:
-        'D': divisao_equilibrada,
-        'R': radiciacao,
-        'P': porcentagem
     }
 
     if comando in switch_comando:
@@ -79,15 +111,20 @@ def processar_comando(comando):
     return False
 
 
-def exibir_lista():
+def exibir_manual():
     limpar_tela()
-    print('Calculadora criada por: Kaique Brito.')
+    print('Calculadora e fórmula da dvisão equilibrada\
+\ncriadas por: Kaique Brito.\n')
+    print('Obs 1: Digite o índice a esquerda do operador e o radicando a \
+direita para radiciação.')
+    print('Obs 2: No momento não é possível realizar expressões de radiciação \
+envolvendo mais de um operador.\n')
 
     operadores = [
-        ("+", "Adição", "&", "AND", "D", "(:) Divisão equilibrada"),
-        ("-", "Subtração", "|", "OR", "R", "(√) Radiciação"),
+        ("+", "Adição", "&", "AND", ":", "Divisão equilibrada"),
+        ("-", "Subtração", "|", "OR", "@", "Radiciação"),
         ("*", "Multiplicação", "^", "XOR", "P", "(%) Porcentagem"),
-        ("**", "Exponenciação", "~", "NOT", "L", "Listar"),
+        ("**", "Exponenciação", "~", "NOT", "M", "Manual"),
         ("/", "Divisão", "<<", "Deslocamento à esquerda", "H", "Histórico"),
         ("//", "Divisão inteira", ">>", "Deslocamento à direita", "A",
          "Apagar histórico"),
@@ -114,17 +151,14 @@ def adicionar_historico(expressao, resultado):
 def exibir_historico():
     limpar_tela()
     print('Histórico das operações:')
-
     if historico:
         tabelas = []
         for i, (expressao, resultado) in enumerate(historico, 1):
             tabelas.append([i, expressao, resultado])
 
-        headers = ["Index", "Expressão", "Resultado"]
-        tabela = tabulate(tabelas, headers,
-                          tablefmt="fancy_grid",
-                          numalign="center",
-                          stralign="center")
+        # Isso entre colchetes é tipo argumentos posicionais ao contrário
+        headers = ["Expressão", "Resultado"]
+        tabela = tabulate(tabelas, headers, tablefmt="fancy_grid")
         print(tabela)
     else:
         print('Histórico vazio.\n')
@@ -143,13 +177,10 @@ def apagar_historico():
 ########################### OPERADORES ESPECIAIS ###############################
 
 # Fórmula pensada por mim, como uma variação da divisão inteira
-def divisao_equilibrada():
+def divisao_equilibrada(expressao):
     limpar_tela()
-    print('Divisão equilibrada\n')
-
     try:
-        dividendo = int(input('Dividendo: '))
-        divisor = int(input('Divisor: '))
+        dividendo, divisor = map(int, expressao.split(':'))
         quociente = dividendo // divisor
         resto = dividendo % divisor
         next = quociente + 1
@@ -159,42 +190,41 @@ def divisao_equilibrada():
         if resto == 0:
             resultado = f'{quociente} x {divisor}'
 
-        print(f'\nResultado:\n{resultado}\n')
         adicionar_historico(f'{dividendo}:{divisor}', resultado)
+        return resultado
 
     except ValueError:
-        print('Valor inválido.')
+        return 'Não é possível usar mais de um operador\
+\ncom o de divisão equilibrada.'
 
     except ZeroDivisionError:
-        print('Impossível dividir por zero.')
+        return 'Impossível dividir por zero.'
 
 
 # Lógica para raiz quadrada, cúbica, etc...
-def radiciacao():
-    print('Radiciação\n')
+def radiciacao(expressao):
     limpar_tela()
-
     try:
-        indice = int(input('Índice: '))
-        radicando = int(input('Radicando: '))
+        indice, radicando = map(int, expressao.split('@'))
         potencia = 1 / indice
 
         # Verifica se o radicando é negativo
         if radicando < 0:
-            print("\nUse um número real.\n")
+            return '\nUse um número real.\n'
         else:
             raiz = formatar(radicando ** potencia)
-            print(f'\nResultado:\n{raiz}\n')
             adicionar_historico(f'(índice: {indice}) √{radicando}', raiz)
+            return raiz
 
     except ValueError:
-        print('\nValor inválido.\n')
+        return 'Desculpe, não consigo realizar expressões envolvendo\
+\nradiciação e outros operadores no momento.'
 
 
 def porcentagem():
     limpar_tela()
-    print('Porcentagem\n')
-
+    print('Porcentagem')
+    print('Enter = saber o valor da porcentagem sem realizar cálculo.\n')
     try:
         valor_total = float(input('Valor: '))
         operador = input('Operador ou Enter: ')
@@ -216,14 +246,19 @@ def porcentagem():
         adicionar_historico(expressao, resultado)
 
     except ValueError:
-        print('\nValor inválido.\n')
+        print('\nErro: valor inválido.\n')
 
     except SyntaxError:
-        print('\nOperador inválido.\n')
+        print('\nErro: operador inválido.\n')
 
 
 ################################################################################
 
+# Função para limpar a tela, compatível com Windows e Unix-based OS
+def limpar_tela():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
 # Executa a função principal se o script for executado diretamente
 if __name__ == "__main__":
-    main()
+    entrada()
