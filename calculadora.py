@@ -1,5 +1,6 @@
 import os
 
+print('\nCalculadora v0.10.0')
 
 # Função para limpar a tela, compatível com Windows e Unix-based OS
 def limpar_tela():
@@ -13,7 +14,7 @@ def obter_numero(mensagem):
             return float(input(mensagem))
         except ValueError:
             limpar_tela()
-            print('\nErro: valor inválido. Tente novamente.\n')
+            print('\nValor inválido. Tente novamente.')
 
 
 # Função para executar a operação matemática
@@ -23,19 +24,25 @@ def executar_operacao(numero, operador, prox_num):
         '+': lambda: numero + prox_num,
         '-': lambda: numero - prox_num,
         '*': lambda: numero * prox_num,
+        '**': lambda: numero ** prox_num,
         '/': lambda: numero / prox_num,
         '//': lambda: numero // prox_num,
-        '**': lambda: numero ** prox_num,
         '%': lambda: numero % prox_num,
     }
-    # Verifica se o operador está no dicionário e executa a operação
-    if operador in switch_operador:
-        return switch_operador[operador]()
-    # Caso o operador seja '%%', executa a função da formula_brito
-    elif operador == '%%':
-        limpar_tela()
-        print(f'Resultado:\n{divisao_equilibrada(int(numero), int(prox_num))}')
-        main()
+
+    try:
+        if operador in switch_operador:
+            return switch_operador[operador]()
+        elif operador == '%%':
+            limpar_tela()
+            print(f'Resultado:\n{divisao_equilibrada(
+                int(numero), int(prox_num))}')
+            main()
+        else:
+            return 'Operador inválido'
+
+    except ZeroDivisionError:
+        return '\nErro: é impossível dividir por zero.'
 
 
 def divisao_equilibrada(dividendo, divisor, n1='x', n2=''):
@@ -54,35 +61,50 @@ def main():
     while True:
         # Solicita ao usuário para iniciar ou parar a operação
         entrada = input(
-            '\nDigite "I" para iniciar a operação ou "P" para parar: ').lower()
+            '\nDigite "C" para continuar ou "P" para parar: ').lower()
         limpar_tela()
 
         # Inicia a operação
-        if entrada == 'i':
-            print('\nCalculadora v0.9.0\n')
-            numero = obter_numero('Primeiro número:\n')
+        if entrada == 'c':
+            numero = obter_numero('\nPrimeiro número:\n')
 
             while True:
-                operador = input(
-                    '\nOperador (ou "F" para finalizar):\n').lower()
+                operador = input('\nOperador ou comando ("F" para finalizar \
+| "L" para listar operadores):\n').lower()
 
                 if operador == 'f':
                     break
+                elif operador == 'l':
+                    limpar_tela()
+                    print('\nOperadores disponíveis:')
+                    print(' +  : Adição')
+                    print(' -  : Subtração')
+                    print(' *  : Multiplicação')
+                    print(' ** : Exponenciação')
+                    print(' /  : Divisão')
+                    print(' // : Divisão inteira')
+                    print(' %  : Módulo')
+                    print(' %% : Divisão equilibrada')
+                    continue
+
+                # Verifica se o operador é válido antes de continuar
+                if operador not in ['+', '-', '*', '**', '/', '//', '%', '%%']:
+                    limpar_tela()
+                    print('\nOperador inválido. Tente novamente.')
+                    continue
 
                 prox_num = obter_numero('\nPróximo número:\n')
 
-                # Verifica se o próximo número (divisor) é zero em operações
-                # que não permitem divisão por zero
-                if prox_num == 0 and operador in ['/', '//', '%', '%%']:
-                    print('\nErro: é impossível dividir por zero.')
-                    continue
-
                 # Executa a operação e atualiza o número
                 resultado = executar_operacao(numero, operador, prox_num)
-                if resultado is not None:
-                    numero = int(resultado) if isinstance(
-                        resultado, int) else resultado
-                    print(f'\nResultado: {numero}\n')
+
+                if isinstance(resultado, float) and resultado.is_integer():
+                    resultado = int(resultado)
+
+                print(f'\nResultado: {resultado}\n')
+
+                # Atualiza o número para a próxima iteração
+                numero = resultado
 
         # Encerra o programa
         elif entrada == 'p':
