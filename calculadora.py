@@ -9,7 +9,7 @@ from tabulate import tabulate
 
 # Função principal
 def entrada():
-    print('Calculadora v0.22.0\n')
+    print('Calculadora v0.23.0\n')
     print('Pressione "M" para ver o manual.\n')
     try:
         while True:
@@ -34,7 +34,7 @@ def entrada():
                 print(f'Resultado:\n{resultado}\n')
             except Exception:
                 limpar_tela()
-                print(f'Erro ao avaliar a expressão. Tente novamente.\n')
+                print(f'Erro ao avaliar a expressão.\n')
 
     except KeyboardInterrupt:
         limpar_tela()
@@ -45,7 +45,7 @@ def verificar_expressao(expressao):
     if expressao.startswith('.') or expressao.endswith('.'):
         return False
     # Verifica se começa com um sinal de soma
-    if expressao.startswith('+'):
+    if expressao.startswith('+') or '(+' in expressao:
         return False
     # Verifica se não há operadores na expressão
     if expressao.isdigit() or '.' in expressao:
@@ -57,8 +57,7 @@ def verificar_expressao(expressao):
     if expressao.startswith('-'):
         if expressao.lstrip('-').isdigit():
             return False
-    # Verifica se há um ou mais operadores consecutivos de soma, subtração ou
-    # porcentagem
+    # Verifica se há um ou mais operadores consecutivos
     if '%%' in expressao or '++' in expressao or '--' in expressao:
         return False
     # Verifica se há a combinação do sinal de soma com o de subtração sem o uso
@@ -70,6 +69,12 @@ def verificar_expressao(expressao):
         return False
     # Verifica se há ponto sem número à esquerda antes do operador
     if re.search(r'\D\.', expressao):
+        return False
+    # Verifica se há parênteses que não foram fechados
+    if expressao.count('(') != expressao.count(')'):
+        return False
+    # Verifica se há parênteses vazios
+    if '()' in expressao:
         return False
     return True
 
@@ -93,9 +98,10 @@ def resolver_expressao(expressao):
             return porcentagem(expressao)
         # Verifica se há apenas números e parênteses na expressão
         elif expressao.replace('(', '').replace(')', '').isdigit():
-            valor1, valor2 = map(float, expressao.replace(')', '').split('('))
-            expressao = formatar(valor1 * valor2)
-            return expressao
+            resultado = 1
+            for n in expressao.replace('(', '').replace(')', ''):
+                resultado *= int(n)
+            return resultado
 
         expressao = expressao.replace('#', '%')
         resultado = formatar(eval(expressao))
@@ -132,14 +138,24 @@ def exibir_manual():
 \ncriadas por: Kaique Brito.\n')
     print('Observações sobre a radiciação e divisão equilibrada:')
     print('1. Digite o índice a direita do radical (representado por "@") e\
-\no radicando a esquerda para calcular a raiz numa radiciação.\n')
+\no radicando a esquerda para calcular a raiz numa radiciação;')
     print('2. No momento não é possível realizar expressões de radiciação\
 \nou divisão equilibrada envolvendo mais de um operador.\n')
     print('Observações sobre a porcentagem:')
     print('1. No momento só é possível fazer expressões básicas com porcentagem\
- (+-*/).\n')
-    print('2. Por enquanto não é possível usar números negativos, parênteses e \
-\nmais de um operador (além da porcentagem) em expressões com esse operador.\n')
+ (+-*/);')
+    print('2. E também não é possível usar parênteses e números negativos em \
+expressões\nde porcentagem com outros operadores.\n')
+    print('Dicas:')
+    print('1. É possível usar números negativos, parênteses e pontos para\
+ números decimais;')
+    print('2. Utilizar apenas números e parênteses resultará em uma\
+ multiplicação;')
+    print('3. É possível saber o percentual de uma porcentagem digitando \
+números\n(inclusive negativos) com "%" no final, exemplo: "50%"\
+ (resultado: 0.5);')
+    print('4. Você pode saber a parte de um valor digitando a \
+porcentagem seguida do valor\ntotal, exemplo: 5%20 (resultado: 1).\n')
 
     operadores = [
         ("+", "Adição"),
@@ -184,7 +200,9 @@ def exibir_manual():
                    headers=["Operadores:", "Descrição:"],
                    tablefmt="fancy_grid"))
 
-    print('\nArraste para cima para explorar mais o manual..\n')
+    print('\nArraste para cima para explorar mais o manual.\n')
+
+# (possível comando para mostrar fórmulas dos operadores em breve...)
 
 
 ############################### HISTÓRICO ######################################
@@ -239,90 +257,68 @@ def apagar_historico():
 # Fórmula pensada por mim, como uma variação da divisão inteira
 def divisao_equilibrada(expressao):
     limpar_tela()
-    try:
-        dividendo, divisor = map(int, expressao.split(':'))
-        quociente = dividendo // divisor
-        resto = dividendo % divisor
-        next = quociente + 1
-        resultado = f'{quociente} x {divisor - resto}\n{next} x {resto}'
 
-        # guard clause pra retornar uma divisão inteira caso não haja resto
-        if resto == 0:
-            resultado = f'{quociente} x {divisor}'
+    dividendo, divisor = map(int, expressao.split(':'))
+    quociente = dividendo // divisor
+    resto = dividendo % divisor
+    next = quociente + 1
+    resultado = f'{quociente} x {divisor - resto} | {next} x {resto}'
 
-        adicionar_historico(f'{dividendo}:{divisor}', resultado)
-        return resultado
+    # guard clause pra retornar uma divisão inteira caso não haja resto
+    if resto == 0:
+        resultado = f'{quociente} x {divisor}'
 
-    except ValueError:
-        return 'Erro: mais de um operador ou número decimal.'
-
-    except ZeroDivisionError:
-        return 'Impossível dividir por zero.'
+    adicionar_historico(f'{dividendo}:{divisor}', resultado)
+    return resultado
 
 
 # Lógica para raiz quadrada, cúbica, etc...
 def radiciacao(expressao):
     limpar_tela()
-    try:
-        radicando, indice = map(int, expressao.split('@'))
-        potencia = 1 / indice
 
-        if radicando < 0:
-            return '\nUse um número real.\n'
-        else:
-            # não pega o mesmo números de casas decimais que uma calculadora
-            # científica
-            raiz = formatar(radicando ** potencia)
-            adicionar_historico(f'(índice: {indice}) √{radicando}', raiz)
-            return raiz
-
-    except ValueError:
-        return 'Erro: mais de um operador ou número decimal.'
+    radicando, indice = map(int, expressao.split('@'))
+    potencia = 1 / indice
+    if radicando < 0:
+        return '\nUse um número real.\n'
+    else:
+        # não pega o mesmo números de casas decimais que uma calculadora
+        # científica
+        raiz = formatar(radicando ** potencia)
+        adicionar_historico(f'(índice: {indice}) √{radicando}', raiz)
+        return raiz
 
 
 def porcentagem(expressao):
     limpar_tela()
-    operador = re.search(r'[+\-*/]', expressao)
-    # Calcular valor com porcentagem do valor
-    if expressao.endswith('%') and operador:
-        # Identifica o operador na expressão
-        operador = operador.group(0)
-        # Remove o operador para obter os valores
-        partes = re.split(r'[+\-*/]', expressao)
-        
-        valor = float(partes[0])
-        porcentagem = float(partes[1].replace('%', ''))
-        valor_porcentagem = (valor / 100) * porcentagem
-        expressao_formatada = f'{valor} {operador} {valor_porcentagem}'
-        valor_final = formatar(eval(expressao_formatada))
 
-    # Calcular porcentagem de base 100 (percentual simples)
-    elif expressao.endswith('%'):
-        # Remove o símbolo '%' e converte o restante para número
-        porcentagem = float(expressao.rstrip('%'))
-        # Calcula o valor da porcentagem
-        valor_final = formatar(porcentagem / 100)
+    while '%' in expressao:
+        operador = re.search(r'[+\-*/]', expressao)
+        match = re.search(r'(\d*\.?\d+)([+\-*/])(\d*\.?\d+)%', expressao)
+        # Calcular valor com porcentagem do valor
+        if operador and not expressao.startswith('-'):
+            numero_antes = match.group(1)
+            operador = match.group(2)
+            porcentagem = match.group(3)
 
-    # Calcular percentual com valor (falta ajustar)
-    elif operador:
-        # Identifica o operador na expressão
-        operador = operador.group(0)
-        # Remove o operador para obter os valores
-        partes = re.split(r'[+\-*/]', expressao)
-        if partes[0].endswith('%'):
-            valor = float(partes[1])
-            porcentagem = float(partes[0].replace('%', ''))
-            valor_porcentagem = (porcentagem / 100)
-            expressao_formatada = f'{valor_porcentagem} {operador} {valor}'
-            valor_final = formatar(eval(expressao_formatada))
+            # Construir a nova expressão substituindo a porcentagem
+            nova_expressao = f'{numero_antes} {
+                operador} ({numero_antes} * {porcentagem} / 100)'
+            valor_final = expressao.replace(match.group(0), nova_expressao)
+            break
+        # Calcular percentual
+        else:
+            valor_final = re.sub(r'(\d+)%', r'(\1 / 100)', expressao)
+            if re.search(r'%\d', expressao):
+                porcentagem, valor = map(float, expressao.split('%'))
+                valor_final = formatar((valor / 100) * porcentagem)
+                adicionar_historico(expressao, valor_final)
+                return valor_final
+            break
 
-    # Calcular porcentagem do valor
-    else:
-        porcentagem, valor = map(float, expressao.split('%'))
-        valor_final = formatar((valor / 100) * porcentagem)
-    
-    adicionar_historico(expressao, valor_final)
-    return valor_final
+    resultado = formatar(eval(valor_final))
+    adicionar_historico(expressao, resultado)
+
+    return resultado
 
 
 ################################################################################
