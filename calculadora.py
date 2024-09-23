@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Função principal
 def entrada():
-    print('Calculadora v0.24.0\n')
+    print('Calculadora v0.24.1\n')
     print('Pressione "M" para ver o manual.\n')
     try:
         while True:
@@ -102,6 +102,7 @@ def resolver_expressao(expressao):
             resultado = 1
             for n in expressao.replace('(', '').replace(')', ''):
                 resultado *= int(n)
+            adicionar_historico(expressao, resultado)
             return resultado
 
         expressao = expressao.replace('#', '%')
@@ -138,16 +139,18 @@ def manual():
     limpar_tela()
     print('Calculadora e fórmula da divisão equilibrada\
 \ncriadas por: Kaique Brito.\n')
-    print('Observações sobre a radiciação e divisão equilibrada:')
-    print('1. Digite o índice a direita do radical (representado por "@") e\
-\no radicando a esquerda para calcular a raiz numa radiciação;')
-    print('2. No momento não é possível realizar expressões de radiciação\
-\nou divisão equilibrada envolvendo mais de um operador.\n')
     print('Observações sobre a porcentagem:')
     print('1. No momento só é possível fazer expressões básicas com porcentagem\
  (+-*/);')
     print('2. E também não é possível usar parênteses e números negativos em \
 expressões\nde porcentagem com outros operadores.\n')
+    print('Observações sobre a radiciação e divisão equilibrada:')
+    print('1. Digite o índice a direita do radical (representado por "@") e\
+\no radicando a esquerda para calcular a raiz numa radiciação;')
+    print('2. No momento não é possível realizar expressões de radiciação\
+\nou divisão equilibrada envolvendo mais de um operador.')
+    print('3. Só é possível usar números inteiros ao fazer divisão\
+\nequilibrada (os resultados também são sempre números inteiros).\n')
     print('Dicas:')
     print('1. É possível usar números negativos, parênteses e pontos para\
  números decimais;')
