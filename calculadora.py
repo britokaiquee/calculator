@@ -328,7 +328,7 @@ def adicionar_historico(expressao, resultado):
     resultado_str = str(resultado)
     if isinstance(resultado, (int, float)):
         num_digitos = len(resultado_str.replace('.', '').replace('-', ''))
-        if num_digitos > 6:  # Para evitar conotação científica
+        if num_digitos > 6:  # Para evitar notação científica
             resultado = 'Não foi possível registrar.'
     lista_historico.append((expressao, resultado))
 
