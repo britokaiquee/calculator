@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Função principal
 def entrada():
-    print('Calculadora v0.25\n')
+    print('Calculadora v0.25.0\n')
     print('Pressione "M" para ver o manual.\n')
     try:
         while True:
