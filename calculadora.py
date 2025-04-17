@@ -119,7 +119,7 @@ def resolver_expressao(expressao):
 
 def formatar(numero):
     if isinstance(numero, float):
-        arredondado = round(numero, 10)  # para evitar imprecisão float
+        arredondado = round(numero, 10)  # Para evitar imprecisão float
         return int(arredondado) if arredondado.is_integer() else arredondado
     return numero
 
@@ -328,7 +328,7 @@ def adicionar_historico(expressao, resultado):
     resultado_str = str(resultado)
     if isinstance(resultado, (int, float)):
         num_digitos = len(resultado_str.replace('.', '').replace('-', ''))
-        if num_digitos > 6:
+        if num_digitos > 6:  # Para evitar conotação científica
             resultado = 'Não foi possível registrar.'
     lista_historico.append((expressao, resultado))
 
