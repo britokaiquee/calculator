@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Função principal
 def entrada():
-    print('Calculadora v0.24.1\n')
+    print('Calculadora v0.25\n')
     print('Pressione "M" para ver o manual.\n')
     try:
         while True:
@@ -77,6 +77,9 @@ def verificar_expressao(expressao):
     # Verifica se há parênteses vazios
     if '()' in expressao:
         return False
+    # Verifica se há vírgula, colchetes ou chaves
+    if any(char in expressao for char in ',[]{}'):
+        return False
     return True
 
 
@@ -87,9 +90,10 @@ def mensagem_erro(expressao):
 
 
 def resolver_expressao(expressao):
-    # Verifica se a expressão contém um operador válido
-    if not re.search(r'[+\-*/#&|^~<<>>:@%()]', expressao):
-        return 'Operador não encontrado. Verifique a expressão.'
+    # Verifica se há mais de 10 casas decimais antes de um operador
+    if re.search(r'\d*\.\d{11,}(?=[+\-*/#&|^~<>@%():])', expressao):
+        return 'Desculpe, a calculadora não tem suporte\
+            \npara números com mais de 10 casas decimais.'
     try:
         if ':' in expressao:
             return divisao_equilibrada(expressao)
@@ -114,8 +118,9 @@ def resolver_expressao(expressao):
 
 
 def formatar(numero):
-    if isinstance(numero, float) and numero.is_integer():
-        return int(numero)
+    if isinstance(numero, float):
+        arredondado = round(numero, 10)  # para evitar imprecisão float
+        return int(arredondado) if arredondado.is_integer() else arredondado
     return numero
 
 
@@ -139,11 +144,16 @@ def manual():
     limpar_tela()
     print('Calculadora e fórmula da divisão equilibrada\
 \ncriadas por: Kaique Brito.\n')
+    print('Sobre resultados de expressões não registradas no histórico:')
+    print('a calculadora não tem suporte para armazenar resultados com mais de\
+6 dígitos\nno histórico.\n')
     print('Observações sobre a porcentagem:')
     print('1. No momento só é possível fazer expressões básicas com porcentagem\
  (+-*/);')
-    print('2. E também não é possível usar parênteses e números negativos em \
-expressões\nde porcentagem com outros operadores.\n')
+    print('2. Também não é possível usar parênteses e números negativos em \
+expressões\nde porcentagem com outros operadores.')
+    print('3. E não dá para fazer expressões do tipo "50%+10", que seria 10.5 \
+por exemplo.\n')
     print('Observações sobre a radiciação e divisão equilibrada:')
     print('1. Digite o índice a direita do radical (representado por "@") e\
 \no radicando a esquerda para calcular a raiz numa radiciação;')
@@ -315,6 +325,11 @@ lista_historico = []
 
 
 def adicionar_historico(expressao, resultado):
+    resultado_str = str(resultado)
+    if isinstance(resultado, (int, float)):
+        num_digitos = len(resultado_str.replace('.', '').replace('-', ''))
+        if num_digitos > 6:
+            resultado = 'Não foi possível registrar.'
     lista_historico.append((expressao, resultado))
 
 
@@ -397,7 +412,7 @@ def porcentagem(expressao):
 
     while '%' in expressao:
         operador = re.search(r'[+\-*/]', expressao)
-        match = re.search(r'(\d*\.?\d+)([+\-*/])(\d*\.?\d+)%', expressao)
+        match = re.search(r'(\d*\.?\d+)([+\-/])(\d\.?\d+)%', expressao)
         # Calcular valor com porcentagem do valor
         if operador and not expressao.startswith('-'):
             numero_antes = match.group(1)
